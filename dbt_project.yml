@@ -36,3 +36,16 @@ models:
           +materialized: table
         dot_311:
           +materialized: table
+    project_work: # setting up model for project
+      staging:
+        +materialized: table
+        +schema: nyc_project_staging
+      marts:
+        +materialized: table
+        +schema: nyc_project_warehouse_marts
+        conformed:
+          +materialized: table
+        restaurant_inspection:
+          +materialized: table
+        dohmh_311:
+          +materialized: table
