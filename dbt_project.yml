@@ -39,10 +39,10 @@ models:
     project_work: # setting up model for project
       staging:
         +materialized: table
-        +schema: nyc_project_staging
+        +schema: project_staging_data
       marts:
         +materialized: table
-        +schema: nyc_project_warehouse_marts
+        +schema: project_warehouse_marts
         conformed:
           +materialized: table
         restaurant_inspection:
