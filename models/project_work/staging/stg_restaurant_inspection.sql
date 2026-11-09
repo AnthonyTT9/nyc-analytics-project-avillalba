@@ -11,13 +11,15 @@ cleaned AS (
             inspection_date,
             grade_date,
             record_date,
+            longitude,
+            latitude,
             zipcode,
             boro,            
             grade,
             critical_flag
         ),
         -- Renaming columns 
-        CAST(camis AS STRING) AS unique_id,
+        CAST(camis AS STRING) AS restaurant_id,
         CAST(dba AS STRING) AS restaurant_name,
         CAST(cuisine_description AS STRING) AS cuisine_type,
 
@@ -25,6 +27,10 @@ cleaned AS (
         CAST(inspection_date AS TIMESTAMP) AS inspection_date,
         CAST(grade_date AS TIMESTAMP) AS grade_date,
         CAST(record_date AS TIMESTAMP) AS record_date,
+
+        -- Lat/long
+        CAST(latitude AS DECIMAL) AS latitude,
+        CAST(longitude AS DECIMAL) AS longitude,
 
         -- Cleaning Zip (only contains zipcode of length 5 so not much needed)
         CASE
@@ -66,7 +72,7 @@ cleaned AS (
     -- Filters
     WHERE camis IS NOT NULL
     AND inspection_date IS NOT NULL
-    AND borough IS NOT NULL
+    AND boro IS NOT NULL
 
     -- Deduplicate
     QUALIFY ROW_NUMBER() OVER (PARTITION BY camis, inspection_date, violation_code, inspection_type ORDER BY inspection_date DESC) = 1
