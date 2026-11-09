@@ -21,8 +21,33 @@ cleaned AS (
         -- Renaming columns 
         CAST(camis AS STRING) AS restaurant_id,
         CAST(dba AS STRING) AS restaurant_name,
-        CAST(cuisine_description AS STRING) AS cuisine_type,
 
+        CASE
+            WHEN cuisine_description IS NULL
+                OR TRIM(cuisine_description) = ''
+                OR TRIM(cuisine_description) = 'Not Listed/Not Applicable'
+            THEN 'Unknown'
+            ELSE TRIM(CAST(cuisine_description AS STRING))
+        END AS cuisine_type,
+
+        -- Grouping similar cuisine types (new variable)
+        CASE
+            WHEN cuisine_description IN ('Creole', 'Cajun', 'Creole/Cajun') THEN 'Creole/Cajun'
+            WHEN cuisine_description IN ('Hotdogs', 'Hotdogs/Pretzels') THEN 'Hotdogs'
+            WHEN cuisine_description IN ('Sandwiches', 'Salads', 'Soups',
+                'Sandwiches/Salads/Mixed Buffet', 'Soups/Salads/Sandwiches') THEN 'Sandwiches/Salads/Soups'
+            WHEN cuisine_description IN ('French', 'New French', 'Haute Cuisine') THEN 'French'
+            WHEN cuisine_description IN ('Vegan', 'Vegetarian') THEN 'Vegetarian/Vegan'
+            WHEN cuisine_description IN ('Bakery Products/Desserts', 'Frozen Desserts', 'Donuts',
+                'Bagels/Pretzels', 'Pancakes/Waffles', 'Nuts/Confectionary') THEN 'Bakery/Desserts'
+            WHEN cuisine_description IN ('Coffee/Tea', 'Juice, Smoothies, Fruit Salads',
+                'Bottled Beverages') THEN 'Beverages'
+            WHEN cuisine_description IN ('Polish', 'Russian', 'Czech', 'Eastern European') THEN 'Eastern European'
+            WHEN cuisine_description IN ('Lebanese', 'Egyptian', 'Iranian', 'Turkish',
+                'Armenian', 'Middle Eastern') THEN 'Middle Eastern'
+            ELSE cuisine_description
+        END AS cuisine_group,
+        
         -- Time/date columns
         CAST(inspection_date AS TIMESTAMP) AS inspection_date,
         CAST(grade_date AS TIMESTAMP) AS grade_date,
@@ -63,6 +88,15 @@ cleaned AS (
             WHEN UPPER(TRIM(critical_flag)) = 'NOT CRITICAL' THEN FALSE
             ELSE NULL
         END AS is_critical,
+        -- Shortening phrases in action variable
+        CASE
+            WHEN LOWER(action) LIKE '%re-opened%' THEN 'REOPENED BY DOHMH'
+            WHEN LOWER(action) LIKE '%re-closed%' THEN 'RECLOSED BY DOHMH'
+            WHEN LOWER(action) LIKE '%closed by dohmh%' THEN 'CLOSED BY DOHMH WITH VIOLATIONS CITED'
+            WHEN LOWER(action) LIKE '%no violations%' THEN 'NO VIOLATIONS RECORDED AT INSPECTION'
+            WHEN LOWER(action) LIKE '%violations were cited%' THEN 'VIOLATIONS CITED IN SPECIFIC AREAS'
+            ELSE 'OTHER'
+        END AS action_taken,
 
         -- Metadata
         CURRENT_TIMESTAMP() AS _stg_loaded_at
