@@ -20,6 +20,7 @@ cleaned AS (
            status,
            incident_zip,
            borough,
+           community_board,
            incident_address,
            street_name,
            cross_street_1,
@@ -45,7 +46,7 @@ cleaned AS (
 
        -- Location - clean zip code, handling several common zip code data problems
        CASE
-           WHEN UPPER(TRIM(CAST(incident_zip AS STRING))) IN ('N/A', 'NA') THEN NULL
+       WHEN UPPER(TRIM(CAST(incident_zip AS STRING))) IN ('N/A', 'NA') THEN NULL
            WHEN UPPER(TRIM(CAST(incident_zip AS STRING))) = 'ANONYMOUS' THEN 'Anonymous'
            WHEN LENGTH(CAST(incident_zip AS STRING)) = 5 THEN CAST(incident_zip AS STRING)
            WHEN LENGTH(CAST(incident_zip AS STRING)) = 9 THEN CAST(incident_zip AS STRING)
@@ -64,6 +65,22 @@ cleaned AS (
            WHEN UPPER(TRIM(borough)) IN ('STATEN ISLAND', 'RICHMOND COUNTY') THEN 'Staten Island'
            ELSE 'UNKNOWN or CITYWIDE'
        END AS borough,
+
+       -- Standardized Community Board suusing '###' format
+       CASE
+            WHEN REGEXP_CONTAINS(UPPER(TRIM(community_board)), r'^\d{2} (MANHATTAN|BRONX|BROOKLYN|QUEENS|STATEN ISLAND)$')
+                THEN CONCAT(CASE REGEXP_EXTRACT(UPPER(TRIM(community_board)), r'^\d{2} (.+)$')
+                    WHEN 'MANHATTAN' THEN '1'
+                    WHEN 'BRONX' THEN '2'
+                    WHEN 'BROOKLYN' THEN '3'
+                    WHEN 'QUEENS' THEN '4'
+                    WHEN 'STATEN ISLAND' THEN '5'
+                END,
+                REGEXP_EXTRACT(TRIM(community_board), r'^(\d{2})')
+                )
+                ELSE NULL
+        END AS community_board,
+           
 
        CAST(incident_address AS STRING) AS incident_address,
        CAST(street_name AS STRING) AS street_name,
