@@ -13,6 +13,7 @@ cleaned AS (
             record_date,
             longitude,
             latitude,
+            community_board,
             zipcode,
             boro,            
             grade,
@@ -56,6 +57,13 @@ cleaned AS (
         -- Lat/long
         CAST(latitude AS DECIMAL) AS latitude,
         CAST(longitude AS DECIMAL) AS longitude,
+
+        -- Community_board
+        CASE
+            WHEN REGEXP_CONTAINS(TRIM(CAST(community_board AS STRING)), r'^\d{3}$')
+                THEN TRIM(CAST(community_board AS STRING))
+            ELSE NULL
+        END AS community_board,
 
         -- Cleaning Zip (only contains zipcode of length 5 so not much needed)
         CASE
@@ -109,6 +117,7 @@ cleaned AS (
     AND boro IS NOT NULL
 
     -- Deduplicate
-    QUALIFY ROW_NUMBER() OVER (PARTITION BY camis, inspection_date, violation_code, inspection_type ORDER BY inspection_date DESC) = 1
+    -- All drops rows appear to be actual duplicates (aroun 6,900 rows dropped)
+    QUALIFY ROW_NUMBER() OVER (PARTITION BY camis, inspection_date, violation_code, inspection_type ORDER BY record_date DESC) = 1
 )
 SELECT * FROM cleaned
