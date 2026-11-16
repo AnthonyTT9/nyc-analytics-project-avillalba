@@ -69,7 +69,6 @@ fact_inspection_results AS (
         violation_rest_insp_key,
         cuisine_key,
         inspection_type,
-        -- distinguishable from an otherwise missing violation code.
         action,
         CAST(score AS INT64) AS score,
         grade,
