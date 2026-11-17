@@ -24,6 +24,7 @@ models:
   nyc_analytics:
     +materialized: table
     assignment_work:
+      +enabled: false
       staging:
         +materialized: table
         +schema: nyc_homework_staging
